@@ -7,3 +7,4 @@ COPY server.js /app/
 
 USER nobody
 EXPOSE 8888
+CMD ["nodejs", "server.js"]

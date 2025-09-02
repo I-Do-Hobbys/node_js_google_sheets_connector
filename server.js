@@ -45,44 +45,59 @@ app.listen(PORT, () => {
 });
 
 
+// Async function to read data from a Google Sheet and convert it to JSON
 async function readSheet() {
   try {
+    // Fetch the values from the specified spreadsheet and range
     const result = await service.spreadsheets.values.get({
-      spreadsheetId,
-      range
+      spreadsheetId, // ID of the Google Sheet
+      range           // Range of cells to retrieve (e.g., "Sheet1!A1:C10")
     });
 
+    // Extract the 2D array of values
     const values = result.data.values;
-    const numRows = values ? values.length : 0;
+    const numRows = values ? values.length : 0; // Count rows, handle undefined
+
     console.log(`${numRows} rows retrieved.`);
 
+    // If no data was found, return an empty array
     if (!values || values.length === 0) {
       return [];
     }
 
+    // First row is assumed to contain headers (column names)
     const headers = values[0];
+
+    // Remaining rows contain the actual data
     const rows = values.slice(1);
 
+    // Map each row to a JSON object using headers as keys
     const jsonData = rows.map(row => {
-      const obj = {};
-      headers.forEach((header, i) => {
-        const cell = row[i] ?? "";
+      const obj = {}; // Object to store row data
 
-        // Check if cell is numeric (int or float)
+      // Loop over each header and assign corresponding cell value
+      headers.forEach((header, i) => {
+        const cell = row[i] ?? ""; // Default to empty string if cell is missing
+
+        // Convert numeric strings to actual numbers
         const value = isNumeric(cell) ? Number(cell) : cell;
-        obj[header] = value;
+
+        obj[header] = value; // Assign to object using header as key
       });
-      return obj;
+
+      return obj; // Return the row object
     });
 
-    return jsonData;
+    return jsonData; // Return array of objects
+
   } catch (error) {
+    // Catch any errors (API errors, network issues, etc.) and log them
     console.error("Error reading sheet:", error);
-    return null;
+    return null; // Return null if there was an error
   }
 }
 
-// Helper function to check for numeric strings
+// Helper function to check if a string represents a numeric value
 function isNumeric(value) {
   return typeof value === 'string' && !isNaN(value) && value.trim() !== '';
 }
